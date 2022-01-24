@@ -28,6 +28,10 @@
   color: white;
 }
 
+.nav {
+  margin-bottom: 1rem;
+}
+
 .minting {
   font-size: 20px;
   color: white;
@@ -83,6 +87,10 @@
   -webkit-text-fill-color: transparent;
   background-size: 200% 200%;
   animation: gradient-animation 4s ease infinite;
+}
+
+.collection-item {
+  background-color: white;
 }
 
 .mint-button {

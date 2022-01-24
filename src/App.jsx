@@ -1,10 +1,13 @@
 import React, {useEffect, useState, useRef} from 'react';
-import './styles/App.css';
-import githubLogo from './assets/github.svg';
-
 import { ethers } from "ethers";
-import myEpicNft from './utils/MyEpicNFT.json';
 import CanvasDraw from "react-canvas-draw";
+import { Tabs, Tab, Col, Row } from 'react-bootstrap';
+import Figure from 'react-bootstrap/Figure'
+
+import CollectionItem from './components/CollectionItem'
+import myEpicNft from './utils/MyEpicNFT.json';
+import githubLogo from './assets/github.svg';
+import './styles/App.css';
 
 // Constants
 const GITHUB_HANDLE = 'kuriakinzeng';
@@ -13,7 +16,7 @@ const CREATOR_NAME = 'KZ';
 const OPENSEA_COLLECTION = 'doodle-nft-ylb2s1uykm'
 const OPENSEA_LINK = `https://testnets.opensea.io/assets/${OPENSEA_COLLECTION}`;
 const TOTAL_MINT_COUNT = 50;
-const CONTRACT_ADDRESS = '0xe606a90181235ecA2af8fA1D69e5e1659eDc1501'
+const CONTRACT_ADDRESS = '0xA9896080eF790Ff5c7E5935860016299bf9A5dE5'
 
 const App = () => {
   const canvas = useRef();
@@ -22,6 +25,7 @@ const App = () => {
   const [totalNftMinted, setTotalNftMinted] = useState("");
   const [mintingFlag, setMintingFlag] = useState("");
   const [doodleData, setDoodleData] = useState("");
+  const [collection, setCollection] = useState("");
 
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -40,6 +44,7 @@ const App = () => {
       console.log("Found an authorized account: ", account);
       setCurrentAccount(account);
       setupEventListener();
+      getImages(account);
     } else {
       console.log('No authorized account found');
     }
@@ -146,6 +151,13 @@ const App = () => {
     }
   }
 
+  const getImages = async (account) => {
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, provider);
+    let userCollection = await connectedContract.NFTsMetaDataByOwner(account);
+    setCollection(userCollection)
+  }
+
   // Render Methods
   const renderNotConnectedContainer = () => (
     <button className="cta-button connect-wallet-button" onClick={connectWallet}>
@@ -154,6 +166,7 @@ const App = () => {
   );
 
   const renderMintButton = () => {
+    collection && console.log(collection, "collection data")
     return mintingFlag ?
     (
       <div className="minting">Minting in progress...</div>
@@ -161,39 +174,52 @@ const App = () => {
     :
     (
       <div>
-        <div>
-          <button
-            onClick={() => {
-              canvas.current.eraseAll();
-            }}
-          >
-            Erase
-          </button>
-          <button
-            onClick={() => {
-              canvas.current.undo();
-            }}
-          >
-            Undo
-          </button>
-          <button
-          onClick={() => {
-            setDoodleData(canvas.current.getDataURL())
-            console.log(canvas.current.getDataURL());
-          }}
-        >
-          Done
-        </button>
-          <CanvasDraw
-            ref={canvas}
-            style={{
-              margin: "auto"
-            }}
-          />
-        </div>
-        <button className="cta-button mint-button" onClick={() => askContractToMintNft()}>
-          Mint NFT
-        </button>
+        <Tabs defaultActiveKey="first">
+          <Tab eventKey="first" title="mint">
+            <div>
+              <button
+                onClick={() => {
+                  canvas.current.eraseAll();
+                }}
+              >
+                Erase
+              </button>
+              <button
+                onClick={() => {
+                  canvas.current.undo();
+                }}
+              >
+                Undo
+              </button>
+              <button
+              onClick={() => {
+                setDoodleData(canvas.current.getDataURL())
+                console.log(canvas.current.getDataURL());
+              }}
+            >
+              Done
+            </button>
+              <CanvasDraw
+                ref={canvas}
+                style={{
+                  margin: "auto"
+                }}
+              />
+            </div>
+            <button className="cta-button mint-button" onClick={() => askContractToMintNft()}>
+              Mint NFT
+            </button>
+          </Tab>
+          <Tab eventKey="second" title="collection">
+            <Row className="">
+              { collection && collection.map(nft => (
+                  <Col md="auto">
+                    <CollectionItem nft={nft}/>
+                  </Col>
+              ))}
+            </Row>
+          </Tab>
+        </Tabs>
       </div>
     );
   }
